@@ -175,12 +175,13 @@ public class Line extends JPanel {
             ReqFill(g,sx,sy,Color.BLUE,Color.BLACK,sx,sy);
         }
         if(fillMode==2){
-            CorFill(g,new Point(sx,sy), getPatternC());
-            //CorFill(g,new Point(sx,sy), getPatternR());
+             CorFill(g,new Point(sx,sy), getPatternC());
+           // CorFill(g,new Point(sx,sy), getPatternR());
         }
         g.drawImage(getPatternC(),10,getHeight()-getPatternC().getHeight(),null);
         g.drawImage(getPatternR(),getPatternC().getWidth()+getPatternR().getHeight()+10,getHeight()-getPatternC().getHeight(),null);
         g.setFont(new Font("Arial", Font.BOLD, 12));
+        g.setColor(Color.BLACK);
         g.drawString("Паттерны:",10,getHeight()-getPatternC().getHeight()-10);
     }
 

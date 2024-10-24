@@ -54,8 +54,8 @@ public class Line extends JPanel {
                    }
                }
                 if(fillMode==2){
-             CorFill(new Point(sx,sy), getPatternC(),buffer[sx][sy]);
-         //   CorFill(new Point(sx,sy), getPatternR());
+                    //  CorFill(new Point(sx,sy), getPatternC(),buffer[sx][sy]);
+             CorFill(new Point(sx,sy), getPatternR(),buffer[sx][sy]);
             }
                repaint();
             }
@@ -79,7 +79,7 @@ public class Line extends JPanel {
         buttonBez.setLocation(0,0);
         buttonBez.addActionListener(e -> {
             mode = 1;
-           // pointList.clear();
+           pointList.clear();
             fillMode = 0;
            // clearArr();
             //repaint();
@@ -92,7 +92,7 @@ public class Line extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 mode = 0;
-                //pointList.clear();
+                pointList.clear();
                 fillMode = 0;
                // clearArr();
                // repaint();
@@ -105,7 +105,7 @@ public class Line extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 mode = 2;
-               // pointList.clear();
+               pointList.clear();
                 fillMode = 0;
                // clearArr();
                // repaint();
@@ -118,7 +118,7 @@ public class Line extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 fillMode = 1;
-               // pointList.clear();
+               pointList.clear();
                 //repaint();
             }
         });
@@ -228,6 +228,10 @@ public class Line extends JPanel {
         ReqFill( x - 1, y, c, target);
         ReqFill( x, y + 1, c, target);
         ReqFill( x, y - 1, c, target);
+//        ReqFill( x-1, y - 1, c, target);
+//        ReqFill( x+1, y + 1, c, target);
+//        ReqFill( x+1, y - 1, c, target);
+//        ReqFill( x-1, y + 1, c, target);
     }
     void CorFill(Point p,BufferedImage bufferedImage,Color target){
         Stack<Point> stack = new Stack<>();

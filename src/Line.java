@@ -17,11 +17,46 @@ public class Line extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-               if(fillMode==0) pointList.add(new Point(e.getX(),e.getY()));
+               if(fillMode==0) {
+                   pointList.add(new Point(e.getX(),e.getY()));
+                   drawPoints(Color.RED,new Point(e.getX(),e.getY()));
+                   if(pointList.size()>=2 &&mode==0) {
+                       for (int i=0;i<pointList.size()-1;i++) {
+                           paintLine(Color.BLACK, pointList.get(i), pointList.get(i+1));
+                       }
+                   }
+                   //        if(pointList.size()>= 4&&mode==1){
+                   if(pointList.size()== 4&&mode==1) {
+                       for (int i = 0; i < pointList.size(); i++) {
+                           paintLine(Color.GREEN, pointList.get(i), pointList.get(i + 1));
+                           paintLine(Color.GREEN, pointList.get(i + 1), pointList.get(i + 2));
+                           paintLine(Color.GREEN, pointList.get(i + 2), pointList.get(i + 3));
+                           Point p1 = pointList.get(i);
+                           Point p2 = pointList.get(++i);
+                           Point p3 = pointList.get(++i);
+                           Point p4 = pointList.get(++i);
+                           paintBezie(Color.BLUE, p1, p2, p3, p4);
+                           pointList.clear();
+
+                       }
+                   }
+                   if (pointList.size()>=2&&mode==2){
+            paintCircle(Color.RED,pointList.get(0),pointList.get(1));
+            pointList.clear();
+        }
+
+               }
                else {
                    sx = e.getX();
                    sy = e.getY();
+                   if(fillMode==1){
+                       ReqFill(sx,sy,Color.BLUE,buffer[sx][sy]);
+                   }
                }
+                if(fillMode==2){
+             CorFill(new Point(sx,sy), getPatternC(),buffer[sx][sy]);
+         //   CorFill(new Point(sx,sy), getPatternR());
+            }
                repaint();
             }
         });
@@ -42,15 +77,12 @@ public class Line extends JPanel {
         JButton buttonBez = new JButton("Безье");
         buttonBez.setSize(100,50);
         buttonBez.setLocation(0,0);
-        buttonBez.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mode = 1;
-                pointList.clear();
-                fillMode = 0;
-                clearArr();
-                repaint();
-            }
+        buttonBez.addActionListener(e -> {
+            mode = 1;
+           // pointList.clear();
+            fillMode = 0;
+           // clearArr();
+            //repaint();
         });
 
         JButton buttonLine = new JButton("Прямая");
@@ -60,10 +92,10 @@ public class Line extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 mode = 0;
-                pointList.clear();
+                //pointList.clear();
                 fillMode = 0;
-                clearArr();
-                repaint();
+               // clearArr();
+               // repaint();
             }
         });
         JButton buttonCr = new JButton("Круг");
@@ -73,10 +105,10 @@ public class Line extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 mode = 2;
-                pointList.clear();
+               // pointList.clear();
                 fillMode = 0;
-                clearArr();
-                repaint();
+               // clearArr();
+               // repaint();
             }
         });
         JButton buttonFl = new JButton("Заливка \n (рекурсия)");
@@ -142,41 +174,13 @@ public class Line extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if(pointList.size()>=2 &&mode==0) {
-            for (int i=0;i<pointList.size()-1;i++) {
-                paintLine(g,Color.BLACK, pointList.get(i), pointList.get(i+1));
+        for(int i=0;i<buffer.length;i++){
+            for (int k=0;k<buffer[0].length;k++){
+                if(buffer[i][k]!=null){
+                    g.setColor(buffer[i][k]);
+                    g.fillRect(i,k,2,2);
+                }
             }
-        }
-        for (Point point : pointList) {
-            drawPoints(g, Color.RED, point);
-        }
-        if(pointList.size()>= 4&&mode==1){
-
-            for(int i=0;i<pointList.size();i++){
-                if(pointList.size()-i<4) break;
-                paintLine(g,Color.GREEN, pointList.get(i), pointList.get(i+1));
-                paintLine(g,Color.GREEN, pointList.get(i+1), pointList.get(i+2));
-                paintLine(g,Color.GREEN, pointList.get(i+2), pointList.get(i+3));
-                Point p1 = pointList.get(i);
-                Point p2 = pointList.get(++i);
-                Point p3 = pointList.get(++i);
-                Point p4 = pointList.get(++i);
-                paintBezie(g,Color.BLUE,p1,p2,p3,p4);
-
-            }
-
-        }
-        if (pointList.size()>=2&&mode==2){
-            clearArr();
-            paintCircle(g,Color.RED,pointList.get(0),pointList.get(1));
-            pointList.clear();
-        }
-        if(fillMode==1){
-            ReqFill(g,sx,sy,Color.BLUE,Color.BLACK,sx,sy);
-        }
-        if(fillMode==2){
-             CorFill(g,new Point(sx,sy), getPatternC());
-           // CorFill(g,new Point(sx,sy), getPatternR());
         }
         g.drawImage(getPatternC(),10,getHeight()-getPatternC().getHeight(),null);
         g.drawImage(getPatternR(),getPatternC().getWidth()+getPatternR().getHeight()+10,getHeight()-getPatternC().getHeight(),null);
@@ -204,51 +208,43 @@ public class Line extends JPanel {
     }
 
 
-    void paintCircle(Graphics g,Color c,Point p, Point p2){
+    void paintCircle(Color c,Point p, Point p2){
         int r = (int) Math.sqrt(Math.pow((p2.x-p.x),2)+Math.pow((p2.y-p.y),2));
-        g.setColor(c);
         for (double t =0; t<2*Math.PI;t+=1./r){
             int x = (int) (p.getX()+r*Math.cos(t));
             int y = (int) (p.getY()+r*Math.sin(t));
-            g.drawRect(x,y,1,1);
+            buffer[x][y]=c;
             if(x<buffer.length&&y<buffer[0].length&&x>1&&y>1) buffer[x][y] = c;
         }
         System.out.println("circle");
     }
-    void ReqFill(Graphics g, int x, int y, Color c, Color target, int sqX, int sqY) {
-        int l1 = (int) Math.sqrt(Math.pow((x-sqX),2)+Math.pow((y-sqY),2));
-        if(l1>400){
-          //  System
-            return;
-        }
+    void ReqFill(int x, int y, Color c, Color target) {
         if (x < 0 || x >= getWidth() || y < 0 || y >= getHeight()||y>buffer[0].length||x>buffer.length) return;
         Color currentColor = buffer[x][y];
 
-        if (currentColor != null) return;
-        g.setColor(c);
-        g.fillRect(x, y, 1, 1);
+        if (currentColor != target) return;
         buffer[x][y] = c;
-        ReqFill(g, x + 1, y, c, target,sqX,sqY);
-        ReqFill(g, x - 1, y, c, target,sqX,sqY);
-        ReqFill(g, x, y + 1, c, target,sqX,sqY);
-        ReqFill(g, x, y - 1, c, target,sqX,sqY);
+        ReqFill(x + 1, y, c, target);
+        ReqFill( x - 1, y, c, target);
+        ReqFill( x, y + 1, c, target);
+        ReqFill( x, y - 1, c, target);
     }
-    void CorFill(Graphics g,Point p,BufferedImage bufferedImage){
+    void CorFill(Point p,BufferedImage bufferedImage,Color target){
         Stack<Point> stack = new Stack<>();
         stack.push(p);
         while (!stack.isEmpty()){
             Point point = stack.pop();
             if(point.x<=0||point.x>=getWidth()||point.y<=0||point.y>=getHeight()) continue;
-            if(buffer[point.x][point.y]!=null)continue;
+            if(buffer[point.x][point.y]!=target)continue;
 
             int patternX = point.x % bufferedImage.getWidth();
             int patternY = point.y%bufferedImage.getHeight();
             Color patternC = new Color(bufferedImage.getRGB(patternX,patternY));
 
-            g.setColor(patternC);
+          //  g.setColor(patternC);
             int x = point.x;
             int y = point.y;
-            g.drawRect(x,y,1,1);
+           // g.drawRect(x,y,1,1);
             buffer[x][y] = patternC;
 
 
@@ -258,12 +254,12 @@ public class Line extends JPanel {
             stack.push(new Point(x,y-1));
         }
     }
-    void paintLine(Graphics g,Color c,Point p1,Point p2){
+    void paintLine(Color c,Point p1,Point p2){
 
         int dx = p2.x - p1.x;
         int dy = p2.y - p1.y;
         int steps = Math.max(Math.abs(dx), Math.abs(dy));
-        g.setColor(c);
+        //g.setColor(c);
         double xIncrement = (double) dx / steps;
         double yIncrement = (double) dy / steps;
 
@@ -272,24 +268,26 @@ public class Line extends JPanel {
 
         for (int i = 0; i <= steps; i++) {
             if(x<buffer.length&&y<buffer[0].length&&x>1&&y>1) buffer[(int) Math.round(x)][(int) Math.round(y)] = c;
-            g.drawRect((int) Math.round(x), (int) Math.round(y), 1, 1);
             x += xIncrement;
             y += yIncrement;
         }
     }
-    void paintBezie(Graphics g,Color c,Point p1,Point p2,Point p3,Point p4){
+    void paintBezie(Color c,Point p1,Point p2,Point p3,Point p4){
        int steps = 1000;
-       g.setColor(c);
         for (int i =0;i<steps;i++){
             double t = i/(double)steps;
             Point p = getBezie(t,p1,p2,p3,p4);
-            g.drawRect(p.x,p.y,1,1);
+            buffer[p.x][p.y] = c;
         }
     }
-    void drawPoints(Graphics g,Color color,Point ...points){
-        g.setColor(color);
+    void drawPoints(Color color,Point ...points){
         for (Point p:points){
-            g.fillRect(p.x,p.y,5,5);
+            for (int x =0;x<5;x++){
+                for (int y =0;y<5;y++){
+                    if(x+p.x<buffer.length&&y+p.y<buffer[0].length) buffer[p.x+x][p.y+y] = color;
+                }
+            }
+
         }
     }
     Point getBezie(double t,Point p1,Point p2, Point p3, Point p4){

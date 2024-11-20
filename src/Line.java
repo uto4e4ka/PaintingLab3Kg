@@ -36,7 +36,11 @@ public class Line extends JPanel {
                            Point p3 = pointList.get(++i);
                            Point p4 = pointList.get(++i);
                            paintBezie(Color.BLUE, p1, p2, p3, p4);
-                           pointList.clear();
+                           pointList.remove(2);
+                           pointList.remove(1);
+                           pointList.remove(0);
+
+                          // pointList.clear();
 
                        }
                    }
@@ -50,7 +54,8 @@ public class Line extends JPanel {
                    sx = e.getX();
                    sy = e.getY();
                    if(fillMode==1){
-                       ReqFill(sx,sy,Color.BLUE,buffer[sx][sy]);
+                       //ReqFill(sx,sy,Color.BLUE,buffer[sx][sy]);
+                       ScanlineFill(sx,sy,Color.BLUE,buffer[sx][sy]);
                    }
                }
                 if(fillMode==2){
@@ -233,6 +238,47 @@ public class Line extends JPanel {
 //        ReqFill( x+1, y - 1, c, target);
 //        ReqFill( x-1, y + 1, c, target);
     }
+    void ScanlineFill(int x, int y, Color fillColor, Color targetColor) {
+
+        if (x < 0 || x >= buffer.length || y < 0 || y >= buffer[0].length) return;
+        if (buffer[x][y]!=targetColor) return;
+
+        Stack<int[]> queue = new Stack<>();
+        queue.add(new int[]{x, y});
+
+        while (!queue.isEmpty()) {
+
+            int[] point = queue.pop();
+            int cx = point[0];
+            int cy = point[1];
+
+
+            if (buffer[cx][cy]!=targetColor) continue;
+
+            int left = cx;
+            int right = cx;
+            while (left >= 0 && buffer[left][cy]==targetColor) {
+                left--;
+            }
+            left++;
+            while (right < buffer.length && buffer[right][cy]==targetColor) {
+                right++;
+            }
+            right--;
+            for (int i = left; i <= right; i++) {
+                buffer[i][cy] = fillColor;
+
+
+                if (cy > 0 && buffer[i][cy - 1]==targetColor) {
+                    queue.push(new int[]{i, cy - 1});
+                }
+                if (cy < buffer[0].length - 1 && buffer[i][cy + 1]==targetColor) {
+                    queue.push(new int[]{i, cy + 1});
+                }
+            }
+        }
+    }
+
     void CorFill(Point p,BufferedImage bufferedImage,Color target){
         Stack<Point> stack = new Stack<>();
         stack.push(p);

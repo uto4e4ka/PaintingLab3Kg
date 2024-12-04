@@ -21,7 +21,7 @@ public class ImageHandler extends JPanel {
         JSlider slider = new JSlider(1, 100, 1);
         slider.setMinorTickSpacing(1);
         slider.setBounds(300, 475, 200, 50);
-        slider.setMaximum(10);
+        slider.setMaximum(200);
         JButton button = new JButton();
         button.addActionListener(new ActionListener() {
             @Override
@@ -58,13 +58,61 @@ public class ImageHandler extends JPanel {
         slider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                if(slider.getValue()%2==0) peaks = slider.getValue();
+                peaks = slider.getValue();
                 textPane.setText("Колличество пиков "+peaks);
                 repaint();
             }
         });
     }
-    public static BufferedImage applyContrastEnhancementFilter(BufferedImage img) {
+    public static BufferedImage getPreparingImage(BufferedImage inputImage,int threshold) {
+        // Пороговое значение
+        BufferedImage outputImage = new BufferedImage(
+                inputImage.getWidth(),
+                inputImage.getHeight(),
+                BufferedImage.TYPE_INT_RGB
+        );
+
+        for (int y = 0; y < inputImage.getHeight(); y++) {
+            for (int x = 0; x < inputImage.getWidth(); x++) {
+                // Получаем текущий пиксель
+                Color color = new Color(inputImage.getRGB(x, y));
+                // Рассчитываем яркость (грэйскейл)
+                int grey = (int) (color.getRed() * 0.299 +
+                        color.getGreen() * 0.587 +
+                        color.getBlue() * 0.114);
+
+                // Применяем пороговое преобразование
+                int binaryValue = (grey >= threshold) ? 255 : 0;
+
+                // Устанавливаем новый цвет пикселя
+                Color newColor = new Color(binaryValue, binaryValue, binaryValue);
+                outputImage.setRGB(x, y, newColor.getRGB());
+            }
+        }
+
+        return outputImage;
+    }
+//}
+//        BufferedImage outputImage = new BufferedImage(inputImage.getWidth(),inputImage.getHeight(),BufferedImage.TYPE_INT_RGB);
+//        int period = 64;
+//        for (int y = 0; y < inputImage.getHeight(); y++) {
+//            for (int x = 0; x < inputImage.getWidth(); x++) {
+//                Color color = new Color(inputImage.getRGB(x, y));
+//                int red = sawtoothTransform(color.getRed(), period);
+//                int green = sawtoothTransform(color.getGreen(), period);
+//                int blue = sawtoothTransform(color.getBlue(), period);
+//
+//                Color newColor = new Color(red, green, blue);
+//                outputImage.setRGB(x, y, newColor.getRGB());
+//            }
+//        }
+//        return outputImage;
+   // }
+private static int calculateBrightness(int rgb) {
+    Color color = new Color(rgb);
+    return (int) (color.getRed() * 0.299 + color.getGreen() * 0.587 + color.getBlue() * 0.114);
+}
+    public static BufferedImage applyContrastEnhancementFilter(BufferedImage img,double a,double b) {
         int width = img.getWidth();
         int height = img.getHeight();
 
@@ -76,24 +124,24 @@ public class ImageHandler extends JPanel {
         };
 
         BufferedImage newImage = new BufferedImage(width, height, img.getType());
-
-        for (int y = 1; y < height - 1; y++) {
-            for (int x = 1; x < width - 1; x++) {
-                int sum = 0;
-
-                for (int ky = -1; ky <= 1; ky++) {
-                    for (int kx = -1; kx <= 1; kx++) {
-                        Color c = new Color(img.getRGB(x + kx, y + ky));
-                        int gray = calculateBrightness(c);
-                        sum += gray * kernel[ky + 1][kx + 1];
-                    }
-                }
-
-                int newValue = Math.min(255, Math.max(0, sum));
-                Color newColor = new Color(newValue, newValue, newValue);
-                newImage.setRGB(x, y, newColor.getRGB());
+        for (int i=1;i<img.getWidth()-1;i++) {
+            for (int j = 1; j < img.getHeight() - 1;j++) {
+                int color = (int) (a + b * (
+                                img.getRGB(i - 1, j - 1) * kernel[0][0] +
+                                img.getRGB(i - 1, j) * kernel[0][1] +
+                                img.getRGB(i - 1, j + 1) * kernel[0][2] +
+                                img.getRGB(i, j - 1) * kernel[1][0] +
+                                img.getRGB(i, j) * kernel[1][1] +
+                                img.getRGB(i, j + 1) * kernel[1][2] +
+                                img.getRGB(i + 1, j - 1) * kernel[2][0] +
+                                img.getRGB(i + 1, j) * kernel[2][1] +
+                                img.getRGB(i + 1, j + 1) * kernel[2][2]
+                ));
+                int finalColor = (int) Math.min(255, Math.max(0, color));
+                newImage.setRGB(i, j, new Color(finalColor,finalColor,finalColor).getRGB());
             }
         }
+                //Color newColor = new Color(newValue, newValue, newValue)
         return newImage;
     }
     public BufferedImage getGrayImage(BufferedImage b) {
@@ -159,11 +207,11 @@ public class ImageHandler extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         BufferedImage img = resizeImage(image,200,200);
-        g.drawImage(resizeImage(image, 200, 200), 300, 0, this);
-        g.drawImage(getGrayImage(resizeImage(image, 200, 200)), 0, 0, this);
-
-        g.drawImage(applySawtoothContrast(resizeImage(image, 200, 200), peaks, 0), 600, 0, this);
-        g.drawImage(applyContrastEnhancementFilter(applySawtoothContrast(resizeImage(image, 200, 200), peaks, 0)),0,400,this);
+        BufferedImage grayImage = getGrayImage(img);
+        g.drawImage(grayImage, 300, 0, this);
+        g.drawImage(img, 0, 0, this);
+        g.drawImage(getPreparingImage(grayImage,peaks), 600, 0, this);
+        g.drawImage(applyContrastEnhancementFilter(grayImage,0,1/4.),0,400,this);
     }
 
     public static void main(String[] args) throws IOException {

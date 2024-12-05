@@ -14,14 +14,16 @@ public class ImageHandler extends JPanel {
     BufferedImage image;
     int peaks = 0;
 
+
+
     public ImageHandler() throws IOException {
         setLayout(null);
-        image = ImageIO.read(new File("C:\\Users\\Alex\\Downloads\\img2_low_contrast.jpg"));
+        image = ImageIO.read(new File("C:\\Users\\Uto4ka\\Downloads\\img3_low_contrast.jpg"));
 
         JSlider slider = new JSlider(1, 100, 1);
         slider.setMinorTickSpacing(1);
         slider.setBounds(300, 475, 200, 50);
-        slider.setMaximum(200);
+        slider.setMaximum(255);
         JButton button = new JButton();
         button.addActionListener(new ActionListener() {
             @Override
@@ -59,7 +61,7 @@ public class ImageHandler extends JPanel {
             @Override
             public void stateChanged(ChangeEvent e) {
                 peaks = slider.getValue();
-                textPane.setText("Колличество пиков "+peaks);
+                textPane.setText("Порог "+peaks);
                 repaint();
             }
         });
@@ -74,17 +76,11 @@ public class ImageHandler extends JPanel {
 
         for (int y = 0; y < inputImage.getHeight(); y++) {
             for (int x = 0; x < inputImage.getWidth(); x++) {
-                // Получаем текущий пиксель
                 Color color = new Color(inputImage.getRGB(x, y));
-                // Рассчитываем яркость (грэйскейл)
                 int grey = (int) (color.getRed() * 0.299 +
                         color.getGreen() * 0.587 +
                         color.getBlue() * 0.114);
-
-                // Применяем пороговое преобразование
-                int binaryValue = (grey >= threshold) ? 255 : 0;
-
-                // Устанавливаем новый цвет пикселя
+                int binaryValue = (grey >= threshold) ? grey : 0;
                 Color newColor = new Color(binaryValue, binaryValue, binaryValue);
                 outputImage.setRGB(x, y, newColor.getRGB());
             }

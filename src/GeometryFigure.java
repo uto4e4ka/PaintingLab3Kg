@@ -8,6 +8,7 @@ public class GeometryFigure extends JPanel {
     private double rotationX = 0;
     private double rotationY = 0;
     private double rotationZ = 0;
+    private double moveX,moveY;
 
     // Метод для вращения точек вокруг осей
     private double[] rotatePoint(double[] point, double angleX, double angleY, double angleZ) {
@@ -65,6 +66,7 @@ public class GeometryFigure extends JPanel {
 
                 // Вращаем точку
                 double cord[] = rotatePoint(new double[] {x, y, z}, rotationX, rotationY, rotationZ);
+                double cord1[] = movePoint(new double[]{x,y},moveX,moveY);
 
                 // Проецируем точку на 2D (игнорируем z-координату)
                 System.out.println(""+x);
@@ -72,7 +74,7 @@ public class GeometryFigure extends JPanel {
                 int screenY = centerY - (int) cord[1];  // инвертируем Y для правильного отображения
 
                 // Рисуем точку
-                g2d.fillRect(screenX, screenY, 2, 2); // рисуем точку как маленький прямоугольник
+                g2d.fillRect(screenX+(int)cord1[0], screenY+(int)cord1[0], 2, 2); // рисуем точку как маленький прямоугольник
             }
         }
     }
@@ -84,7 +86,11 @@ public class GeometryFigure extends JPanel {
         rotationZ += deltaZ;
         repaint();
     }
-
+    public void move(double x,double y){
+        moveX+=x;
+        moveY+=y;
+        repaint();
+    }
     public static void main(String[] args) {
         JFrame frame = new JFrame("Rotating 3D Sphere");
         GeometryFigure spherePanel = new GeometryFigure();
@@ -97,7 +103,8 @@ public class GeometryFigure extends JPanel {
         // Таймер для обновления углов вращения и перерисовки
         Timer timer = new Timer(30, e -> {
             // Вращение на небольшое количество градусов по всем осям
-            spherePanel.rotate(0.01, 0.01, 0.01);
+            //spherePanel.rotate(0, 0.1, 0);
+            spherePanel.move(0.1,0);
         });
         timer.start();
     }

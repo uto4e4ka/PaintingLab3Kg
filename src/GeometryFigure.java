@@ -76,7 +76,7 @@ public class GeometryFigure extends JPanel {
                 // Рисуем точку
                 g2d.fillRect(screenX+(int)cord1[0], screenY+(int)cord1[0], 2, 2); // рисуем точку как маленький прямоугольник
             }
-        }лллл
+        }
     }
 
     // Метод для обновления углов вращения

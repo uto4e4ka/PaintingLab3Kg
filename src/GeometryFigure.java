@@ -2,97 +2,131 @@ import javax.swing.*;
 import java.awt.*;
 
 public class GeometryFigure extends JPanel {
-    private static final int RADIUS = 150;
+    private static final int BASE_RADIUS = 150;
+    private double scaleFactor = 1.0;
+    private double rotationX = 0, rotationY = 0, rotationZ = 0;
+    private double moveX = 0, moveY = 0;
 
-    // Углы вращения вокруг осей X, Y и Z
-    private double rotationX = 0;
-    private double rotationY = 0;
-    private double rotationZ = 0;
-    private double moveX,moveY;
 
-    // Метод для вращения точек вокруг осей
-    private double[] rotatePoint(double[] point, double angleX, double angleY, double angleZ) {
-        // Вращение вокруг оси X
-        double tempY = point[1] * Math.cos(angleX) - point[2] * Math.sin(angleX);
-        double tempZ = point[1] * Math.sin(angleX) + point[2] * Math.cos(angleX);
-        point[1] = tempY;
-        point[2] = tempZ;
-
-        // Вращение вокруг оси Y
-        double tempX = point[0] * Math.cos(angleY) + point[2] * Math.sin(angleY);
-        point[2] = -point[0] * Math.sin(angleY) + point[2] * Math.cos(angleY);
-        point[0] = tempX;
-
-        // Вращение вокруг оси Z
-        tempX = point[0] * Math.cos(angleZ) - point[1] * Math.sin(angleZ);
-        point[1] = point[0] * Math.sin(angleZ) + point[1] * Math.cos(angleZ);
-        point[0] = tempX;
-        return  point;
+    private double[] applyAffineTransformation(double[] point, double[][] matrix) {
+        double[] result = new double[4];
+        for (int i = 0; i < 4; i++) {
+            result[i] = 0;
+            for (int j = 0; j < 4; j++) {
+                result[i] += matrix[i][j] * point[j];
+            }
+        }
+        return result;
     }
-    private double[] movePoint(double[] point, double offsetX, double offsetY) {
-        // Вращение вокруг оси X
-         point[0] = point[0]+offsetX;
-         point[1] = point[1] +offsetY;
-        return  point;
+
+
+    private double[][] createTransformationMatrix(){
+        double[][] scaleMatrix = {
+                {scaleFactor, 0, 0, 0},
+                {0, scaleFactor, 0, 0},
+                {0, 0, scaleFactor, 0},
+                {0, 0,           0, 1}
+        };
+
+        double[][] rotationXMatrix = {
+                {1,                   0,                   0, 0},
+                {0, Math.cos(rotationX), -Math.sin(rotationX),0},
+                {0, Math.sin(rotationX), Math.cos(rotationX), 0},
+                {0, 0,                0,                      1}
+        };
+
+        double[][] rotationYMatrix = {
+                {Math.cos(rotationY), 0, Math.sin(rotationY), 0},
+                {                   0, 1,                  0, 0},
+                {-Math.sin(rotationY), 0, Math.cos(rotationY),0},
+                {0                   , 0,                   0,1}
+        };
+
+        double[][] rotationZMatrix = {
+                {Math.cos(rotationZ), -Math.sin(rotationZ), 0,0},
+                {Math.sin(rotationZ), Math.cos(rotationZ), 0, 0},
+                {                  0,                   0, 1, 0},
+                {                  0,                   0, 0, 1}
+        };
+
+        double[][] translationMatrix = {
+                {1, 0, 0, moveX},
+                {0, 1, 0, moveY},
+                {0, 0, 1,     0},
+                {0, 0, 0,     1}
+        };
+
+        double[][] transformMatrix = multiplyMatrices(translationMatrix, rotationXMatrix);
+        transformMatrix = multiplyMatrices(transformMatrix, rotationYMatrix);
+        transformMatrix = multiplyMatrices(transformMatrix, rotationZMatrix);
+        transformMatrix = multiplyMatrices(transformMatrix, scaleMatrix);
+
+        return transformMatrix;
+    }
+
+    private double[][] multiplyMatrices(double[][] a, double[][] b) {
+        double[][] result = new double[4][4];
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                result[i][j] = 0;
+                for (int k = 0; k < 4; k++) {
+                    result[i][j] += a[i][k] * b[k][j];
+                }
+            }
+        }
+        return result;
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-
-        // Преобразуем Graphics в Graphics2D для лучшего управления
         Graphics2D g2d = (Graphics2D) g;
-
-        // Устанавливаем параметры для рисования точек
         g2d.setColor(Color.BLACK);
 
-        // Центр панели (экран)
         int centerX = getWidth() / 2;
         int centerY = getHeight() / 2;
+        int numPoints = 100;
 
-        // Количество точек (для сглаживания)
-        int numPoints = 200;
+        double[][] transformMatrix = createTransformationMatrix();
 
-        // Перебираем значения углов для создания точек на сфере
         for (int i = 0; i < numPoints; i++) {
-            double alpha = Math.acos(2.0 * i / numPoints - 1); // угол от 0 до π
+            double alpha = Math.acos(2.0 * i / numPoints - 1);
             for (int j = 0; j < numPoints; j++) {
-                double beta = 2 * Math.PI * j / numPoints; // угол от 0 до 2π
+                double beta = 2 * Math.PI * j / numPoints;
+                double x = BASE_RADIUS * Math.sin(alpha) * Math.cos(beta);
+                double y = BASE_RADIUS * Math.sin(alpha) * Math.sin(beta);
+                double z = BASE_RADIUS * Math.cos(alpha);
 
-                // Переводим сферические координаты в декартовы
-                double x = RADIUS * Math.sin(alpha) * Math.cos(beta);
-                double y = RADIUS * Math.sin(alpha) * Math.sin(beta);
-                double z = RADIUS * Math.cos(alpha);
+                double[] point = {x, y, z, 1};
+                double[] transformedPoint = applyAffineTransformation(point, transformMatrix);
 
-                // Вращаем точку
-                double cord[] = rotatePoint(new double[] {x, y, z}, rotationX, rotationY, rotationZ);
-                double cord1[] = movePoint(new double[]{x,y},moveX,moveY);
-
-                // Проецируем точку на 2D (игнорируем z-координату)
-                System.out.println(""+x);
-                int screenX = centerX + (int) cord[0];
-                int screenY = centerY - (int) cord[1];  // инвертируем Y для правильного отображения
-
-                // Рисуем точку
-                g2d.fillRect(screenX+(int)cord1[0], screenY+(int)cord1[0], 2, 2); // рисуем точку как маленький прямоугольник
+                int screenX = centerX + (int) transformedPoint[0];
+                int screenY = centerY - (int) transformedPoint[1];
+                g2d.fillRect(screenX, screenY, 2, 2);
             }
         }
     }
 
-    // Метод для обновления углов вращения
     public void rotate(double deltaX, double deltaY, double deltaZ) {
         rotationX += deltaX;
         rotationY += deltaY;
         rotationZ += deltaZ;
         repaint();
     }
-    public void move(double x,double y){
-        moveX+=x;
-        moveY+=y;
+
+    public void moves(double x, double y) {
+        moveX += x;
+        moveY += y;
         repaint();
     }
+
+    public void scale(double factor) {
+        scaleFactor *= factor;
+        repaint();
+    }
+
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Rotating 3D Sphere");
+        JFrame frame = new JFrame("3D");
         GeometryFigure spherePanel = new GeometryFigure();
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -100,12 +134,29 @@ public class GeometryFigure extends JPanel {
         frame.add(spherePanel);
         frame.setVisible(true);
 
-        // Таймер для обновления углов вращения и перерисовки
         Timer timer = new Timer(30, e -> {
-            // Вращение на небольшое количество градусов по всем осям
-            //spherePanel.rotate(0, 0.1, 0);
-            spherePanel.move(0.1,0);
+            spherePanel.rotate(0, 0.01, 0);
         });
         timer.start();
+
+        frame.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case java.awt.event.KeyEvent.VK_UP:
+                        spherePanel.scale(1.1);
+                        break;
+                    case java.awt.event.KeyEvent.VK_DOWN:
+                        spherePanel.scale(0.9);
+                        break;
+                    case java.awt.event.KeyEvent.VK_LEFT:
+                        spherePanel.moves(-10, 0);
+                        break;
+                    case java.awt.event.KeyEvent.VK_RIGHT:
+                        spherePanel.moves(10, 0);
+                        break;
+                }
+            }
+        });
     }
 }

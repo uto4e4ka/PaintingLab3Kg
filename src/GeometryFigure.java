@@ -7,7 +7,6 @@ public class GeometryFigure extends JPanel {
     private double rotationX = 0, rotationY = 0, rotationZ = 0;
     private double moveX = 0, moveY = 0;
 
-
     private double[] applyAffineTransformation(double[] point, double[][] matrix) {
         double[] result = new double[4];
         for (int i = 0; i < 4; i++) {
@@ -19,8 +18,7 @@ public class GeometryFigure extends JPanel {
         return result;
     }
 
-
-    private double[][] createTransformationMatrix(){
+    private double[][] createTransformationMatrix() {
         double[][] scaleMatrix = {
                 {scaleFactor, 0, 0, 0},
                 {0, scaleFactor, 0, 0},
@@ -30,23 +28,23 @@ public class GeometryFigure extends JPanel {
 
         double[][] rotationXMatrix = {
                 {1,                   0,                   0, 0},
-                {0, Math.cos(rotationX), -Math.sin(rotationX),0},
-                {0, Math.sin(rotationX), Math.cos(rotationX), 0},
-                {0, 0,                0,                      1}
+                {0, Math.cos(rotationX), -Math.sin(rotationX), 0},
+                {0, Math.sin(rotationX), Math.cos(rotationX),  0},
+                {0,                   0,                   0, 1}
         };
 
         double[][] rotationYMatrix = {
-                {Math.cos(rotationY), 0, Math.sin(rotationY), 0},
-                {                   0, 1,                  0, 0},
-                {-Math.sin(rotationY), 0, Math.cos(rotationY),0},
-                {0                   , 0,                   0,1}
+                {Math.cos(rotationY),  0, Math.sin(rotationY), 0},
+                {0,                   1,                   0, 0},
+                {-Math.sin(rotationY), 0, Math.cos(rotationY), 0},
+                {0,                   0,                   0, 1}
         };
 
         double[][] rotationZMatrix = {
-                {Math.cos(rotationZ), -Math.sin(rotationZ), 0,0},
-                {Math.sin(rotationZ), Math.cos(rotationZ), 0, 0},
-                {                  0,                   0, 1, 0},
-                {                  0,                   0, 0, 1}
+                {Math.cos(rotationZ), -Math.sin(rotationZ), 0, 0},
+                {Math.sin(rotationZ), Math.cos(rotationZ),  0, 0},
+                {0,                   0,                   1, 0},
+                {0,                   0,                   0, 1}
         };
 
         double[][] translationMatrix = {
@@ -85,27 +83,66 @@ public class GeometryFigure extends JPanel {
 
         int centerX = getWidth() / 2;
         int centerY = getHeight() / 2;
-        int numPoints = 100;
+        int numPoints = 25;
 
         double[][] transformMatrix = createTransformationMatrix();
 
+
         for (int i = 0; i < numPoints; i++) {
-            double alpha = Math.acos(2.0 * i / numPoints - 1);
+            double alpha1 = Math.PI * i / numPoints; // текущая широта
+            double alpha2 = Math.PI * (i + 1) / numPoints; // следующая широта
             for (int j = 0; j < numPoints; j++) {
-                double beta = 2 * Math.PI * j / numPoints;
-                double x = BASE_RADIUS * Math.sin(alpha) * Math.cos(beta);
-                double y = BASE_RADIUS * Math.sin(alpha) * Math.sin(beta);
-                double z = BASE_RADIUS * Math.cos(alpha);
+                double beta1 = 2 * Math.PI * j / numPoints;
+                double beta2 = 2 * Math.PI * (j + 1) / numPoints;
 
-                double[] point = {x, y, z, 1};
-                double[] transformedPoint = applyAffineTransformation(point, transformMatrix);
 
-                int screenX = centerX + (int) transformedPoint[0];
-                int screenY = centerY - (int) transformedPoint[1];
-                g2d.fillRect(screenX, screenY, 2, 2);
+                double[] point1 = {
+                        BASE_RADIUS * Math.sin(alpha1) * Math.cos(beta1),
+                        BASE_RADIUS * Math.sin(alpha1) * Math.sin(beta1),
+                        BASE_RADIUS * Math.cos(alpha1),
+                        1
+                };
+                double[] point2 = {
+                        BASE_RADIUS * Math.sin(alpha1) * Math.cos(beta2),
+                        BASE_RADIUS * Math.sin(alpha1) * Math.sin(beta2),
+                        BASE_RADIUS * Math.cos(alpha1),
+                        1
+                };
+
+
+                double[] point3 = {
+                        BASE_RADIUS * Math.sin(alpha2) * Math.cos(beta1),
+                        BASE_RADIUS * Math.sin(alpha2) * Math.sin(beta1),
+                        BASE_RADIUS * Math.cos(alpha2),
+                        1
+                };
+
+
+                double[] transformedPoint1 = applyAffineTransformation(point1, transformMatrix);
+                double[] transformedPoint2 = applyAffineTransformation(point2, transformMatrix);
+                double[] transformedPoint3 = applyAffineTransformation(point3, transformMatrix);
+
+
+                int screenX1 = centerX + (int) transformedPoint1[0];
+                int screenY1 = centerY - (int) transformedPoint1[1];
+                int screenX2 = centerX + (int) transformedPoint2[0];
+                int screenY2 = centerY - (int) transformedPoint2[1];
+                int screenX3 = centerX + (int) transformedPoint3[0];
+                int screenY3 = centerY - (int) transformedPoint3[1];
+
+
+                g2d.drawLine(screenX1, screenY1, screenX2, screenY2);
+
+
+                g2d.drawLine(screenX1, screenY1, screenX3, screenY3);
+
+
+                // g2d.drawLine(screenX2, screenY2, screenX3, screenY3);
             }
         }
     }
+
+
 
     public void rotate(double deltaX, double deltaY, double deltaZ) {
         rotationX += deltaX;
@@ -126,7 +163,7 @@ public class GeometryFigure extends JPanel {
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("3D");
+        JFrame frame = new JFrame("Wireframe Sphere");
         GeometryFigure spherePanel = new GeometryFigure();
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
